@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['taskmaster:8080']
+
+  - job_name: 'ecs-metrics'
+    ec2_sd_configs:
+      - region: us-west-2
+        port: 9090
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_ECS_Cluster]
+        target_label: ecs_cluster
+      - source_labels: [__meta_ec2_tag_ECS_Service]
+        target_label: ecs_service
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - 'rules/*.yml'
